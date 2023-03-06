@@ -23,7 +23,7 @@ const newUser = async(req, res = response) => {
 
         //Hash de la contraseña
         const salt = bcrypt.genSaltSync(10);
-        dbUser.password = bcrypt.hashSync(salt);
+        dbUser.password = bcrypt.hashSync(password, salt);
 
         // Generar JWT
         const token = await generateJWT(dbUser.id, name);
@@ -36,6 +36,7 @@ const newUser = async(req, res = response) => {
             ok: true,
             uid: dbUser.id,
             name,
+            email,
             token
         });
 
@@ -79,6 +80,7 @@ const loginUser = async(req, res = response) => {
             ok: true,
             uid: dbUser.id,
             name: dbUser.name,
+            email: dbUser.email,
             token
         })
 
@@ -97,14 +99,18 @@ const loginUser = async(req, res = response) => {
 
 const validateToken = async(req, res = response) => {
 
-    const { uid, name } = req;
+    const { uid } = req;
+    //leer desde la base de datos
+    const dbUser = await User.findById(uid)
 
-    const token = await generateJWT(uid, name);
+    const token = await generateJWT(uid, dbUser.name);
 
     return res.json({
         ok: true,
         uid,
-        name
+        name: dbUser.name,
+        email: dbUser.email,
+        token
     })
 };
 
